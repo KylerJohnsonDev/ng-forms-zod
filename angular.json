@@ -15,7 +15,8 @@
           "inlineStyle": true,
           "inlineTemplate": true,
           "displayBlock": true,
-          "skipTests": true
+          "skipTests": true,
+          "style": "scss"
         }
       },
       "root": "",
@@ -42,6 +43,7 @@
               "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.scss"
             ],
+            "inlineStyleLanguage": "scss",
             "scripts": []
           },
           "configurations": {
@@ -97,9 +99,10 @@
                 "input": "public"
               }
             ],
+            "inlineStyleLanguage": "scss",
             "styles": [
               "@angular/material/prebuilt-themes/azure-blue.css",
-              "src/styles.css"
+              "src/styles.scss"
             ],
             "scripts": []
           }
