@@ -4,7 +4,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { z } from 'zod';
-import { Email, emailSchema, Password, passwordSchema, useFormControl } from './validation';
+import {
+  Email,
+  emailSchema,
+  Password,
+  passwordSchema,
+  useFormControl,
+} from './validation';
 import { MatIconModule } from '@angular/material/icon';
 import { XFormControlHandlerDirective } from './x-form-control-handler.directive';
 
@@ -16,7 +22,7 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
     MatInputModule,
     FormsModule,
     MatIconModule,
-    XFormControlHandlerDirective
+    XFormControlHandlerDirective,
   ],
   template: `
     <mat-card>
@@ -25,10 +31,7 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
       </mat-card-header>
       <mat-card-content class="mt-1">
         <form class="flex flex-col">
-          <mat-form-field
-
-            [class]="{ 'zod-error': !emailControl.isValid()}"
-          >
+          <mat-form-field [class]="{ 'zod-error': !emailControl.isValid() }">
             <mat-label>Email</mat-label>
             <input
               matInput
@@ -46,7 +49,14 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
           </mat-form-field>
           <mat-form-field>
             <mat-label>Password</mat-label>
-            <input matInput name="password" [type]="isPasswordHidden() ? 'password' : 'text'" [(ngModel)]="password" />
+            <input
+              matInput
+              name="password"
+              xFormControlHandler
+              [xformControl]="passwordControl"
+              [type]="isPasswordHidden() ? 'password' : 'text'"
+              [(ngModel)]="passwordControl.value"
+            />
             <button
               mat-icon-button
               matSuffix
@@ -57,15 +67,20 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
                 isPasswordHidden() ? 'visibility_off' : 'visibility'
               }}</mat-icon>
             </button>
-            @if (passwordFormState().errors) {
-              @for (err of passwordFormState().errors; track err.code) {
+            @if (!passwordControl.isValid() && passwordControl.errors()) {
+              @for (err of passwordControl.errors(); track $index) {
                 <mat-hint class="mat-error">{{ err.message }}</mat-hint>
               }
             }
           </mat-form-field>
           <mat-form-field>
             <mat-label>Confirm Password</mat-label>
-            <input matInput name="confirmPassword" [type]="isConfirmPasswordHidden() ? 'password' : 'text'" [(ngModel)]="confirmPassword"/>
+            <input
+              matInput
+              name="confirmPassword"
+              [type]="isConfirmPasswordHidden() ? 'password' : 'text'"
+              [(ngModel)]="confirmPasswordControl.value"
+            />
             <button
               mat-icon-button
               matSuffix
@@ -76,8 +91,8 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
                 isConfirmPasswordHidden() ? 'visibility_off' : 'visibility'
               }}</mat-icon>
             </button>
-            @if (confirmPasswordFormState().errors) {
-              @for (err of confirmPasswordFormState().errors; track err.code) {
+            @if (!confirmPasswordControl.isValid() && confirmPasswordControl.errors()) {
+              @for (err of confirmPasswordControl.errors(); track $index) {
                 <mat-hint class="mat-error">{{ err.message }}</mat-hint>
               }
             }
@@ -108,51 +123,35 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
     }
 
     .zod-error {
-      @include mat.form-field-overrides((
-        filled-caret-color: var(--mat-sys-error),
-        filled-label-text-color: var(--mat-sys-error),
-        outlined-outline-color: var(--mat-sys-error)
-        // filled-container-color: var(--mat-sys-error-container),
-        // filled-indicator-color: var(--mat-sys-error),
-      ));
+      @include mat.form-field-overrides(
+        (
+          filled-caret-color: var(--mat-sys-error),
+          filled-label-text-color: var(--mat-sys-error),
+          outlined-outline-color: var(--mat-sys-error)
+            // filled-container-color: var(--mat-sys-error-container),
+          , // filled-indicator-color: var(--mat-sys-error),
+        )
+      );
     }
   `,
 })
 export class LoginFormComponent {
-  // email = signal<Email>('');
-  // emailFormState = computed(() => {
-  //   const { success, error } = emailSchema.safeParse(this.email());
-  //   return {
-  //     isValid: success,
-  //     errors: error?.errors ?? null,
-  //   };
-  // });
   emailControl = useFormControl<string>({
     defaultValue: '',
     zodSchema: emailSchema,
   });
 
-  password = signal<Password>('');
-  passwordFormState = computed(() => {
-    const { success, error } = passwordSchema.safeParse(this.password());
-    return {
-      isValid: success,
-      errors: error?.errors ?? null,
-    };
+  passwordControl = useFormControl<string>({
+    defaultValue: '',
+    zodSchema: passwordSchema,
   });
 
-  confirmPassword = signal<Password>('');
-  confirmPasswordFormState = computed(() => {
-    const { success, error } = passwordSchema
-      .refine((val) => val === this.confirmPassword(), {
-        message: 'Passwords do not match!',
-      })
-      .safeParse(this.confirmPassword());
-    return {
-      isValid: success,
-      errors: error?.errors ?? null,
-    };
-  });
+  confirmPasswordControl = useFormControl<string>({
+    defaultValue: '',
+    zodSchema: passwordSchema.refine((val) => val === this.passwordControl.value(), {
+      message: 'Passwords do not match!',
+    })
+  })
 
   isPasswordHidden = signal(true);
   isConfirmPasswordHidden = signal(true);
