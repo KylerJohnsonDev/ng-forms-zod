@@ -4,8 +4,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { z } from 'zod';
-import { Email, emailSchema, Password, passwordSchema } from './validation';
+import { Email, emailSchema, Password, passwordSchema, useFormControl } from './validation';
 import { MatIconModule } from '@angular/material/icon';
+import { XFormControlHandlerDirective } from './x-form-control-handler.directive';
 
 @Component({
   selector: 'app-login-form',
@@ -15,6 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
     MatInputModule,
     FormsModule,
     MatIconModule,
+    XFormControlHandlerDirective
   ],
   template: `
     <mat-card>
@@ -25,17 +27,19 @@ import { MatIconModule } from '@angular/material/icon';
         <form class="flex flex-col">
           <mat-form-field
 
-            [class]="{ 'zod-error': !emailFormState().isValid }"
+            [class]="{ 'zod-error': !emailControl.isValid()}"
           >
             <mat-label>Email</mat-label>
             <input
               matInput
               name="email"
               placeholder="Email"
-              [(ngModel)]="email"
+              xFormControlHandler
+              [xformControl]="emailControl"
+              [(ngModel)]="emailControl.value"
             />
-            @if (emailFormState().errors) {
-              @for (err of emailFormState().errors; track err.code) {
+            @if (!emailControl.isValid() && emailControl.errors()) {
+              @for (err of emailControl.errors(); track $index) {
                 <mat-hint class="mat-error">{{ err.message }}</mat-hint>
               }
             }
@@ -115,13 +119,17 @@ import { MatIconModule } from '@angular/material/icon';
   `,
 })
 export class LoginFormComponent {
-  email = signal<Email>('');
-  emailFormState = computed(() => {
-    const { success, error } = emailSchema.safeParse(this.email());
-    return {
-      isValid: success,
-      errors: error?.errors ?? null,
-    };
+  // email = signal<Email>('');
+  // emailFormState = computed(() => {
+  //   const { success, error } = emailSchema.safeParse(this.email());
+  //   return {
+  //     isValid: success,
+  //     errors: error?.errors ?? null,
+  //   };
+  // });
+  emailControl = useFormControl<string>({
+    defaultValue: '',
+    zodSchema: emailSchema,
   });
 
   password = signal<Password>('');
