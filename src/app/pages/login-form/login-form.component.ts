@@ -148,6 +148,10 @@ export class LoginFormComponent {
     zodSchema: passwordSchema,
   });
 
+  // no reactive context in the useFormControl means the zodSchema signal doesn't get updated
+  // that's why this isn't working. Instead, consider wrapping useFormControl in a computed
+  // add a deps array argument to the useFormControl options that contains the value to validate against
+  // and the validation function.
   confirmPasswordControl = useFormControl<string>({
     defaultValue: '',
     zodSchema: computed(() => {
