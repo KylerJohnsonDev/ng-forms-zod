@@ -3,16 +3,15 @@ import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
-import { z } from 'zod';
+import { z, ZodSchema } from 'zod';
 import {
-  Email,
   emailSchema,
-  Password,
   passwordSchema,
   useFormControl,
 } from './validation';
 import { MatIconModule } from '@angular/material/icon';
 import { XFormControlHandlerDirective } from './x-form-control-handler.directive';
+import { XFormError } from '../../components/form-error';
 
 @Component({
   selector: 'app-login-form',
@@ -23,6 +22,7 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
     FormsModule,
     MatIconModule,
     XFormControlHandlerDirective,
+    XFormError,
   ],
   template: `
     <mat-card>
@@ -31,7 +31,7 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
       </mat-card-header>
       <mat-card-content class="mt-1">
         <form class="flex flex-col">
-          <mat-form-field [class]="{ 'zod-error': !emailControl.isValid() }">
+          <mat-form-field appearance="outline" [class]="{ 'zod-error': !emailControl.isValid() }">
             <mat-label>Email</mat-label>
             <input
               matInput
@@ -43,7 +43,7 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
             />
             @if (!emailControl.isValid() && emailControl.errors()) {
               @for (err of emailControl.errors(); track $index) {
-                <mat-hint class="mat-error">{{ err.message }}</mat-hint>
+                <x-form-error [errorMessage]="err.message" />
               }
             }
           </mat-form-field>
@@ -80,6 +80,8 @@ import { XFormControlHandlerDirective } from './x-form-control-handler.directive
               name="confirmPassword"
               [type]="isConfirmPasswordHidden() ? 'password' : 'text'"
               [(ngModel)]="confirmPasswordControl.value"
+              xFormControlHandler
+              [xformControl]="confirmPasswordControl"
             />
             <button
               mat-icon-button
@@ -148,8 +150,11 @@ export class LoginFormComponent {
 
   confirmPasswordControl = useFormControl<string>({
     defaultValue: '',
-    zodSchema: passwordSchema.refine((val) => val === this.passwordControl.value(), {
-      message: 'Passwords do not match!',
+    zodSchema: computed(() => {
+      const schema: ZodSchema<string> = z.string().refine((val) => val === this.passwordControl.value(), {
+        message: 'Passwords do not match'
+      })
+      return schema;
     })
   })
 

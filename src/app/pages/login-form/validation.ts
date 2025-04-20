@@ -1,5 +1,6 @@
-import { computed, linkedSignal, Signal, signal, WritableSignal } from '@angular/core';
+import { computed, effect, inject, Injector, linkedSignal, runInInjectionContext, Signal, signal, WritableSignal } from '@angular/core';
 import { z, ZodIssue, ZodSchema } from 'zod';
+import { isSignal } from '../../utils/isSignal';
 
 export const emailSchema = z.string().email()
 export const passwordSchema = z.string()
@@ -16,7 +17,7 @@ export type Password = z.infer<typeof passwordSchema>
 
 export interface UseFormItemOptions<T> {
   defaultValue: T,
-  zodSchema?: ZodSchema
+  zodSchema?: ZodSchema | Signal<ZodSchema>
 }
 
 export interface XFormControl<T>{
@@ -34,18 +35,21 @@ export function useFormControl<T> (options: UseFormItemOptions<T>): XFormControl
   const value = signal<T>(options.defaultValue);
   const focused = signal(false);
   const pristine = signal(true);
+  const _zodSchema = options.zodSchema
+    ? isSignal<ZodSchema>(options.zodSchema) ? options.zodSchema : signal<ZodSchema>(options.zodSchema)
+    : null;
   const isValid = computed(() => {
     // if no zod schema is provided, assume always valid
-    if (!options.zodSchema) return true;
-    // don't validate until the user
+    if (!_zodSchema) return true;
+    // don't validate until the user has focused on field and then navigates away
     if (!touched()) return true;
 
-    const { success } = options.zodSchema.safeParse(value());
+    const { success } = _zodSchema().safeParse(value());
     return success;
   })
   const errors = computed(() => {
-    if (!options.zodSchema) return null;
-    const { success, error } = options.zodSchema.safeParse(value());
+    if (!_zodSchema) return null;
+    const { success, error } = _zodSchema().safeParse(value());
     if (success) return null;
     return error.issues;
   })
