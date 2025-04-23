@@ -23,12 +23,14 @@ export interface UseFormItemOptions<T> {
 export interface XFormControl<T>{
   value: WritableSignal<T>,
   isValid: Signal<boolean>,
-  errors: Signal<ZodIssue[] | null>,
+  // errors: Signal<ZodIssue[] | null>,
+  errors: WritableSignal<string[]>,
   touched: WritableSignal<boolean>
   dirty: WritableSignal<boolean>
   disabled: WritableSignal<boolean>
   focused: WritableSignal<boolean>
   pristine: WritableSignal<boolean>
+  zodSchema: Signal<ZodSchema> | null
 }
 
 export function useFormControl<T> (options: UseFormItemOptions<T>): XFormControl<T> {
@@ -47,12 +49,13 @@ export function useFormControl<T> (options: UseFormItemOptions<T>): XFormControl
     const { success } = _zodSchema().safeParse(value());
     return success;
   })
-  const errors = computed(() => {
-    if (!_zodSchema) return null;
-    const { success, error } = _zodSchema().safeParse(value());
-    if (success) return null;
-    return error.issues;
-  })
+  const errors = signal<string[]>([])
+  // const errors = computed(() => {
+  //   if (!_zodSchema) return null;
+  //   const { success, error } = _zodSchema().safeParse(value());
+  //   if (success) return null;
+  //   return error.issues;
+  // })
   const touched = signal(false);
   const dirty = linkedSignal<T, boolean>({
     source: value,
@@ -73,7 +76,8 @@ export function useFormControl<T> (options: UseFormItemOptions<T>): XFormControl
     dirty,
     disabled,
     focused,
-    pristine
+    pristine,
+    zodSchema: _zodSchema,
   } satisfies XFormControl<T>
 
 }

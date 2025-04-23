@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,11 +39,10 @@ import { XFormError } from '../../components/form-error';
               placeholder="Email"
               xFormControlHandler
               [xformControl]="emailControl"
-              [(ngModel)]="emailControl.value"
             />
             @if (!emailControl.isValid() && emailControl.errors()) {
               @for (err of emailControl.errors(); track $index) {
-                <x-form-error [errorMessage]="err.message" />
+                <x-form-error [errorMessage]="err" />
               }
             }
           </mat-form-field>
@@ -55,7 +54,6 @@ import { XFormError } from '../../components/form-error';
               xFormControlHandler
               [xformControl]="passwordControl"
               [type]="isPasswordHidden() ? 'password' : 'text'"
-              [(ngModel)]="passwordControl.value"
             />
             <button
               mat-icon-button
@@ -69,7 +67,7 @@ import { XFormError } from '../../components/form-error';
             </button>
             @if (!passwordControl.isValid() && passwordControl.errors()) {
               @for (err of passwordControl.errors(); track $index) {
-                <mat-hint class="mat-error">{{ err.message }}</mat-hint>
+                <x-form-error [errorMessage]="err" />
               }
             }
           </mat-form-field>
@@ -79,7 +77,6 @@ import { XFormError } from '../../components/form-error';
               matInput
               name="confirmPassword"
               [type]="isConfirmPasswordHidden() ? 'password' : 'text'"
-              [(ngModel)]="confirmPasswordControl.value"
               xFormControlHandler
               [xformControl]="confirmPasswordControl"
             />
@@ -95,7 +92,7 @@ import { XFormError } from '../../components/form-error';
             </button>
             @if (!confirmPasswordControl.isValid() && confirmPasswordControl.errors()) {
               @for (err of confirmPasswordControl.errors(); track $index) {
-                <mat-hint class="mat-error">{{ err.message }}</mat-hint>
+                <x-form-error [errorMessage]="err" />
               }
             }
           </mat-form-field>
@@ -122,6 +119,10 @@ import { XFormError } from '../../components/form-error';
         max-width: 400px;
         width: 100%;
       }
+    }
+
+    x-form-error {
+      margin-top: 0.5rem;
     }
 
     .zod-error {
@@ -164,4 +165,10 @@ export class LoginFormComponent {
 
   isPasswordHidden = signal(true);
   isConfirmPasswordHidden = signal(true);
+
+  constructor() {
+    effect(() => {
+      console.log('emailControl', this.emailControl.value());
+    })
+  }
 }

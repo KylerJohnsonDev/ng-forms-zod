@@ -10,7 +10,8 @@ import { Component, input } from '@angular/core';
       background: var(--mat-sys-error);
       color: var(--mat-sys-error-container);
       padding: 0.5rem;
-      border-radius: .5rem;
+      border-radius: .25rem;
+      display: inline-block;
     }
   `
 })
