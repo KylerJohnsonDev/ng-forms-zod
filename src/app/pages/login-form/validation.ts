@@ -1,5 +1,5 @@
 import { computed, effect, inject, Injector, linkedSignal, runInInjectionContext, Signal, signal, WritableSignal } from '@angular/core';
-import { z, ZodIssue, ZodSchema } from 'zod';
+import { SafeParseReturnType, z, ZodIssue, ZodSchema } from 'zod';
 import { isSignal } from '../../utils/isSignal';
 
 export const emailSchema = z.string().email()
@@ -18,6 +18,7 @@ export type Password = z.infer<typeof passwordSchema>
 export interface UseFormItemOptions<T> {
   defaultValue: T,
   zodSchema?: ZodSchema | Signal<ZodSchema>
+  validationDependencies?: ValidationDependency[] | undefined
 }
 
 export interface XFormControl<T>{
@@ -31,6 +32,12 @@ export interface XFormControl<T>{
   focused: WritableSignal<boolean>
   pristine: WritableSignal<boolean>
   zodSchema: Signal<ZodSchema> | null
+  validationDependencies: ValidationDependency[] | undefined
+}
+
+export interface ValidationDependency {
+  formControl: XFormControl<unknown>
+  validate: (formValue: string, depFormValue: string) => SafeParseReturnType<any, any>
 }
 
 export function useFormControl<T> (options: UseFormItemOptions<T>): XFormControl<T> {
@@ -78,6 +85,7 @@ export function useFormControl<T> (options: UseFormItemOptions<T>): XFormControl
     focused,
     pristine,
     zodSchema: _zodSchema,
+    validationDependencies: options.validationDependencies
   } satisfies XFormControl<T>
 
 }
